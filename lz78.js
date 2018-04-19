@@ -13,7 +13,7 @@ var compress = function(stream) {   // Let's assume stream is a string.
 
     dictionary.push('\0');
 
-    while (!compressed) {
+    while (true) {
         let 
             buffer = "",
             index = -1;
@@ -30,16 +30,43 @@ var compress = function(stream) {   // Let's assume stream is a string.
         if(index === -1) {
             dictionary.push(buffer);
             if(buffer.length === 1) {
-                result.push({[buffer.slice(-1)]: 0});
+                result.push(0 + ', ' + [buffer.slice(-1)]);
             } else {
-                result.push({[buffer.slice(-1)]: dictionary.indexOf(buffer.slice(0, buffer.length-1))});
+                result.push(dictionary.indexOf(buffer.slice(0, buffer.length-1)) + ', ' + [buffer.slice(-1)]);
             }
         }
 
         offset = ++extra;
 
-        if(extra === stream.length) compressed = true;
+        if(extra === stream.length) break;
     }
 
     return result;
 }
+
+var decompress = function(input) {
+    let
+        result = "",
+        dictionary = [];
+
+    dictionary.push('\0');
+    for(var entry in input) {   // For each entry in input.
+        let 
+            entryArray = input[entry].split(', '),
+            buffer = "";
+
+        if(entryArray[0] !== 0) {   // If it's a combination of characters.
+            buffer += dictionary[entryArray[0]] + entryArray[1];
+            dictionary.push(buffer);
+        }  else {   // If its a single character.
+            dictionary.push(entryArray[0]);
+            buffer += entryArray[0]
+        }
+
+        result += buffer;
+    }
+
+    return result;
+}
+
+console.log(decompress(compress('ABBABAAAABCCBAC')));
